@@ -10,7 +10,7 @@
     <meta content="" name="description">
 
     <!-- Favicon -->
-    <link href="{% static 'img/favicon.ico' %}" rel="icon">
+    <link href="{% static 'img/rlogo.jpg' %}" rel="icon">
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,7 +40,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-
 </head>
 
 <body>
@@ -66,18 +65,29 @@
                 <div class="nav-item dropdown">
                     <a href="{% url 'service' %}" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Service</a>
                     <div class="dropdown-menu shadow-sm m-0">
-                        <a href="{% url 'service' %}" class="dropdown-item">Feature</a>
-                        <a href="token.html" class="dropdown-item">Token Sale</a>
-                        <a href="faq.html" class="dropdown-item">FAQs</a>
-                        <a href="404.html" class="dropdown-item">404 Page</a>
+                        <a href="{% url 'service' %}" class="dropdown-item">Create wallet</a>
+                        <a href="token.html" class="dropdown-item">Buy Airtime</a>
+                        <a href="faq.html" class="dropdown-item">Crypto exchange</a>
+
                     </div>
                 </div>
                 <a href="{% url 'road_map' %}" class="nav-item nav-link">Roadmap</a>
                 <a href="{% url 'contact_us' %}" class="nav-item nav-link">Contact</a>
                 <!-- login and sign up Links -->
-                <a href="#" class="nav-item nav-link" data-toggle="modal" data-target="#signupModal">Sign Up</a>
-                <a href="#" class="nav-item nav-link" data-toggle="modal" data-target="#loginModal">Login</a>
+                 <div class="nav-item dropdown">
+                    <a href="{% url 'service' %}" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Account</a>
+                    <div class="dropdown-menu shadow-sm m-0">
 
+                        {% if request.session.email %}
+                            <a href="{% url 'logout_user' %}" class="btn btn-danger">Logout</a>
+                        {% else %}
+                            <a href="#" class="nav-item nav-link" data-toggle="modal" data-target="#signupModal">Sign Up</a>
+                            <a href="#" class="nav-item nav-link" data-toggle="modal" data-target="#loginModal">Login</a>
+                        {% endif %}
+
+
+                    </div>
+                </div>
 
             </div>
             <div class="h-100 d-lg-inline-flex align-items-center d-none">
@@ -182,6 +192,56 @@
     <!-- Template Javascript -->
     <script src="{% static 'js/main.js' %}"></script>
 
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container position-fixed top-0 right-0 p-3">
+    </div>
+
+<script>
+document.getElementById('signupForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch('{% url "sign_up" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            document.getElementById('signupErrors').innerText = data.error;
+        } else {
+            alert(data.message);
+            window.location.href = '{% url "home" %}'; // Redirect to home page
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+</script>
+
+    <script>
+document.getElementById('logoutButton').addEventListener('click', function(event) {
+    event.preventDefault();
+
+    fetch('{% url "logout_user" %}', {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url; // Redirect to home
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+</script>
+
   <!-- modal custom Javascript -->
 
     <script>
@@ -201,62 +261,7 @@
         });
       });
     </script>
-    <!-- Toast Container -->
-    <div id="toastContainer" class="toast-container position-fixed top-0 right-0 p-3">
-    </div>
 
-
-    <!-- Custom JavaScript -->
-    <script>
-        function showToast(message, isSuccess) {
-            const toastHTML = `
-                <div class="toast ${isSuccess ? 'bg-success text-white' : 'bg-danger text-white'}" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-body">
-                        ${message}
-                    </div>
-                </div>
-            `;
-            $('#toastContainer').append(toastHTML);
-            $('.toast').toast({ delay: 3000 });
-            $('.toast').toast('show');
-        }
-
-        $('#signupForm').on('submit', function(e) {
-            e.preventDefault();
-            $.ajax({
-                url: '{% url "signup" %}',
-                method: 'POST',
-                data: $(this).serialize(),
-                success: function(response) {
-                    $('#signupModal').modal('hide');
-                    showToast(response.success, true);
-                },
-                error: function(xhr) {
-                    const errors = JSON.parse(xhr.responseText).errors;
-                    $('#signupErrors').html(Object.values(errors).join('<br>'));
-                    showToast('Sign-up failed. Please check the errors.', false);
-                }
-            });
-        });
-
-        $('#loginForm').on('submit', function(e) {
-            e.preventDefault();
-            $.ajax({
-                url: '{% url "login" %}',
-                method: 'POST',
-                data: $(this).serialize(),
-                success: function(response) {
-                    $('#loginModal').modal('hide');
-                    showToast(response.success, true);
-                },
-                error: function(xhr) {
-                    const errors = JSON.parse(xhr.responseText).errors;
-                    $('#loginErrors').html(errors);
-                    showToast('Login failed. Please check the errors.', false);
-                }
-            });
-        });
-    </script>
 </body>
 
 </html>

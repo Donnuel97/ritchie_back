@@ -1,19 +1,15 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import CustomUser
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 
-class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField(required=True, help_text="Required. Enter a valid email address.")
+class SignUpForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+    phone_number = forms.CharField(required=True)
 
     class Meta:
-        model = CustomUser
-        fields = ('username', 'email', 'password1', 'password2')
+        model = User
+        fields = ['username', 'email', 'phone_number', 'password1', 'password2']
 
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if CustomUser.objects.filter(email=email).exists():
-            raise forms.ValidationError("Email is already in use.")
-        return email
-
-class CustomAuthenticationForm(AuthenticationForm):
-    username = forms.EmailField(label="Email")
+class LoginForm(forms.Form):
+    email = forms.EmailField(required=True)
+    password = forms.CharField(widget=forms.PasswordInput, required=True)
