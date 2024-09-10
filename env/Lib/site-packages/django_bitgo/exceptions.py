@@ -1,0 +1,2 @@
+class BitGoException(Exception):
+    pass

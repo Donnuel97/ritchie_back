@@ -360,3 +360,87 @@ h6,
     font-size: 1.5rem;
   }
 }
+
+
+.container {
+            margin-top: 50px;
+        }
+        .crypto-data {
+            margin-top: 20px;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        .card-header {
+            background-color: #140035;
+            color: black;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .list-group-item {
+            border: none;
+            font-size: 1.1em;
+            padding: 10px 0;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .list-group-item {
+            border: none;
+            font-size: 1.1em;
+            padding: 10px 0;
+        }
+        .price {
+            font-size: 1.5em;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .market-cap, .volume, .change-24h {
+            font-size: 1.1em;
+        }
+        .change-positive {
+            color: #28a745;
+        }
+        .change-negative {
+            color: #dc3545;
+        }
+        .arrow {
+            margin-left: 8px;
+            font-size: 1.2em;
+        }
+        .error-message {
+            color: red;
+            font-weight: bold;
+        }
+        /* Make the cards more responsive */
+        @media (max-width: 768px) {
+            .card {
+                margin-bottom: 20px;
+            }
+        }
+
+        .wallet {
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #dff9fb;
+            border: 1px solid #22a6b3;
+            border-radius: 4px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }

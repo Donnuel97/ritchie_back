@@ -1,0 +1,101 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block content %}
+
+    <!-- Header Start -->
+    <div class="container-fluid hero-header bg-light py-5 mb-5">
+        <div class="container py-5">
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 mb-3 animated slideInDown">Exchange</h1>
+                    <nav aria-label="breadcrumb animated slideInDown">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="#">Home</a></li>
+                            <li class="breadcrumb-item"><a href="#">Pages</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">About Us</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="col-lg-6 animated fadeIn">
+                    <img class="img-fluid animated pulse infinite" style="animation-duration: 3s;" src="{% static 'img/hero-2.png' %}" alt="">
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Header End -->
+
+    <!-- About Start -->
+         <div class="container">
+        <h1 class="text-center text-blue">Cryptocurrency Market Overview</h1>
+
+        <!-- Error handling -->
+        <div id="error-message" class="alert alert-danger text-center error-message" style="display: none;">
+            Error fetching data from CryptoCompare.
+        </div>
+
+        <!-- Crypto data cards will be rendered here by JS -->
+        <div id="crypto-cards" class="row crypto-data"></div>
+    </div>
+
+    <!-- JavaScript to update data in real time -->
+    <script>
+        function fetchCryptoData() {
+            fetch('/api/crypto-data/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.crypto_data) {
+                        document.getElementById('error-message').style.display = 'none'; // Hide error message
+                        const cryptoCards = document.getElementById('crypto-cards');
+                        cryptoCards.innerHTML = ''; // Clear previous data
+
+                        data.crypto_data.forEach(coin => {
+                            // Determine if the change is positive or negative
+                            const changeClass = coin.change_24h > 0 ? 'change-positive' : 'change-negative';
+                            const arrowIcon = coin.change_24h > 0
+                                ? '<i class="fas fa-arrow-up arrow"></i>'
+                                : '<i class="fas fa-arrow-down arrow"></i>';
+
+                            // Create the card HTML for each coin
+                            const cardHTML = `
+                                <div class="col-md-4 col-sm-6">
+                                    <div class="card mb-4">
+                                        <div class="card-header">
+                                            ${coin.name} (${coin.symbol})
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group">
+                                                <li class="list-group-item price">Price: $${coin.price.toFixed(2)}</li>
+                                                <li class="list-group-item market-cap">Market Cap: $${coin.market_cap.toLocaleString()}</li>
+                                                <li class="list-group-item volume">Volume (24h): $${coin.volume_24h.toLocaleString()}</li>
+                                                <li class="list-group-item change-24h">Change (24h): <span class="${changeClass}">
+                                                    ${coin.change_24h.toFixed(2)}%
+                                                    ${arrowIcon}
+                                                </span></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            cryptoCards.innerHTML += cardHTML; // Append each card to the container
+                        });
+                    } else {
+                        document.getElementById('error-message').style.display = 'block'; // Show error message
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('error-message').style.display = 'block'; // Show error message
+                });
+        }
+
+        // Fetch crypto data every 10 seconds
+        setInterval(fetchCryptoData, 10000);
+
+        // Initial fetch when page loads
+        window.onload = fetchCryptoData;
+    </script>
+
+
+    <!-- About End -->
+
+{% endblock %}

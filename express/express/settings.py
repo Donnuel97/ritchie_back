@@ -11,9 +11,29 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
 from pathlib import Path
+from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+import environ
+#
+# from dotenv import load_dotenv
+#
+# load_dotenv()
+#
+# BITGO_ACCESS_TOKEN = os.getenv("BITGO_ACCESS_TOKEN")
+# BITGO_API_URL = os.getenv("BITGO_API_URL")
+# settings.py
+from decouple import config
+
+# Use environment variables to store sensitive data
+BITGO_API_URL = config('BITGO_API_URL', default='https://www.bitgo.com/api/v2')
+BITGO_ACCESS_TOKEN = config('BITGO_ACCESS_TOKEN')
+
+# Supported coins
+SUPPORTED_COINS = ['btc', 'eth']
+
+# Wallet password settings
+WALLET_PASSWORD_MIN_LENGTH = 8
 
 
 # Quick-start development settings - unsuitable for production
@@ -37,6 +57,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 'bitgo',
+    # 'django_bitgo',
     'dashboard'
 ]
 
@@ -139,3 +161,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'static/images')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# settings.py
+CRYPTOCOMPARE_API_KEY = 'b0a5c7bc6fe346a2eff2eb2310d11cc823992a544845ae2467d69b36fe0c3489'
+
+LOGIN_URL = '/login/'
+# settings.py
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Store session data in the database

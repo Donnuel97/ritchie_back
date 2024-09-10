@@ -1,0 +1,78 @@
+Metadata-Version: 2.1
+Name: django-bitgo
+Version: 0.1.4
+Summary: Django app for bitGo
+Home-page: https://github.com/accruvia/django_bitgo
+License: MIT
+Keywords: django,bitgo,django_bitgo
+Author: panosangelopoulos
+Author-email: panos.angelopoulos@outlook.com
+Requires-Python: >=3.7.1,<4.0.0
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Requires-Dist: Django (>=3.2.14,<4.0.0)
+Requires-Dist: requests (>=2.28.1,<3.0.0)
+Project-URL: Repository, https://github.com/accruvia/django_bitgo
+Description-Content-Type: text/markdown
+
+# django_bitgo
+
+Django library for BitGo
+
+[![Downloads](https://static.pepy.tech/personalized-badge/django-bitgo?period=month&units=international_system&left_color=black&right_color=blue&left_text=Downloads)](https://pepy.tech/project/django-bitgo)
+
+# Overview
+
+Django BitGo is a powerful and flexible library for connecting your BitGo account and integrate it with your Django project.
+
+---
+
+# Requirements
+
+- Python (3.7, 3.8, 3.9, 3.10)
+- Django (3.2, 4.0, 4.1)
+
+We **highly recommend** and only officially support the latest patch release of
+each Python and Django series.
+
+# Installation
+
+Install using `pip` ...
+
+    pip install django-bitgo
+
+Install using `poetry` ...
+
+```
+poetry add django-bitgo
+```
+
+Add `'django_bitgo'` to your `INSTALLED_APPS` setting.
+
+```python
+INSTALLED_APPS = [
+    ...
+    'django_bitgo',
+]
+```
+
+# API Reference
+
+## The `wallets` module
+
+The top-level module for wallets.
+
+Refer to the [documentation](https://api.bitgo.com/docs/#tag/Address) for details on the use of this package.
+
+### Address
+
+Example of get an address object.
+
+```
+    address = Address()
+    address.get_address(address_id=ADDRESS_ID, coin=COIN, wallet_id=WALLET_ID)
+```
+

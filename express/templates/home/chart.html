@@ -1,0 +1,93 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block content %}
+
+    <!-- Header Start -->
+    <div class="container-fluid hero-header bg-light py-5 mb-5">
+        <div class="container py-5">
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 mb-3 animated slideInDown">Exchange</h1>
+                    <nav aria-label="breadcrumb animated slideInDown">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="#">Home</a></li>
+                            <li class="breadcrumb-item"><a href="#">Pages</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">About Us</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="col-lg-6 animated fadeIn">
+                    <img class="img-fluid animated pulse infinite" style="animation-duration: 3s;" src="{% static 'img/hero-2.png' %}" alt="">
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Header End -->
+
+    <!-- About Start -->
+     <div class="container">
+        <h1 class="text-center">Live Bitcoin (BTC) Price Chart</h1>
+        <canvas id="cryptoChart" width="400" height="200"></canvas>
+    </div>
+
+    <script>
+        // Create Chart.js instance
+        var ctx = document.getElementById('cryptoChart').getContext('2d');
+        var cryptoChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'BTC/USD',
+                    data: [],
+                    borderColor: '#007bff',
+                    fill: false,
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'realtime',  // Live update mode
+                        realtime: {
+                            delay: 2000,  // 2-second delay to smoothen
+                            refresh: 5000,  // Update every 5 seconds
+                            onRefresh: function(chart) {
+                                fetchCryptoPrice(chart);
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+
+        // Fetch Crypto Price and Update the Chart
+        function fetchCryptoPrice(chart) {
+            fetch("{% url 'get_crypto_prices' %}")
+                .then(response => response.json())
+                .then(data => {
+                    var price = data.USD;
+
+                    // Add current time and price to the chart
+                    chart.data.datasets[0].data.push({
+                        x: Date.now(),  // Current timestamp
+                        y: price       // BTC price
+                    });
+
+                    chart.update();
+                })
+                .catch(error => {
+                    console.log('Error fetching crypto price:', error);
+                });
+        }
+
+        // Initial Fetch to Display Price
+        fetchCryptoPrice(cryptoChart);
+    </script>
+
+
+    <!-- About End -->
+
+{% endblock %}

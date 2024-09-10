@@ -22,3 +22,13 @@ class UserForm(models.Model):
 
     def __str__(self):
         return self.username
+
+class Wallet(models.Model):
+    user = models.ForeignKey(UserForm, on_delete=models.CASCADE)
+    wallet_id = models.CharField(max_length=255)
+    coin = models.CharField(max_length=50)
+    label = models.CharField(max_length=100, blank=True, null=True)
+    balance = models.DecimalField(max_digits=20, decimal_places=8, default=0)
+
+    def __str__(self):
+        return f"{self.user.username}'s {self.coin} Wallet"

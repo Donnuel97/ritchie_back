@@ -13,3 +13,12 @@ class SignUpForm(UserCreationForm):
 class LoginForm(forms.Form):
     email = forms.EmailField(required=True)
     password = forms.CharField(widget=forms.PasswordInput, required=True)
+
+class WalletCreationForm(forms.Form):
+    coin_choices = (
+        ('btc', 'Bitcoin'),
+        ('eth', 'Ethereum'),
+        # Add more coins if necessary
+    )
+    coin = forms.ChoiceField(choices=coin_choices)
+    label = forms.CharField(max_length=100, required=False)
