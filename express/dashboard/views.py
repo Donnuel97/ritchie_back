@@ -3,11 +3,15 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.http import JsonResponse
 from .models import *
+import json
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib import messages
 import requests
 from django.conf import settings
 from .decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from web3 import Web3
 # from .utils import create_bitgo_wallet
 
 
@@ -165,115 +169,150 @@ def get_crypto_data_api(request):
     return JsonResponse({'crypto_data': crypto_data})
 
 
+
+
+
 @login_required
 def create_wallet(request):
-    user = UserForm.objects.get(email=request.session['email'])
 
-    if request.method == 'POST':
-        wallet_password = request.POST.get('wallet_password')
-
-        if len(wallet_password) < settings.WALLET_PASSWORD_MIN_LENGTH:
-            messages.error(request, 'Password too short.')
-            return redirect('create_wallet')
-
-        existing_wallet = Wallet.objects.filter(user=user, coin='btc').first()
-        if existing_wallet:
-            messages.error(request, 'You already have a Bitcoin wallet.')
-            return redirect('wallet_detail', wallet_id=existing_wallet.wallet_id)
-
-        url = f"{settings.BITGO_API_URL}/btc/wallet"
-
-        headers = {
-            'Authorization': f"Bearer {settings.BITGO_ACCESS_TOKEN}",
-            'Content-Type': 'application/json',
-        }
-        payload = {
-            "passphrase": wallet_password,
-            "label": f"{user.username}_BTC_wallet"
-        }
-
-        response = requests.post(url, json=payload, headers=headers)
-
-        # Print status code and raw response content for debugging
-        print("Status Code:", response.status_code)
-        print("Response Text:", response.text)  # Use response.text to see raw response
-
-        try:
-            response_data = response.json()
-            if response.status_code == 200:
-                Wallet.objects.create(
-                    user=user,
-                    wallet_id=response_data['id'],
-                    coin='btc',
-                    label=response_data.get('label', f"{user.username}'s BTC Wallet"),
-                    balance=0
-                )
-                messages.success(request, 'Bitcoin wallet created successfully.')
-                return redirect('wallet_detail', wallet_id=response_data['id'])
-            else:
-                error_message = response_data.get('error', 'Error creating wallet.')
-                messages.error(request, error_message)
-        except ValueError:
-            messages.error(request, 'Received non-JSON response from BitGo.')
-
-        return redirect('create_wallet')
     return render(request, 'wallet/wallet.html')
 
-# Wallet detail view
+
 @login_required
-def wallet_detail(request, wallet_id):
-    user = UserForm.objects.get(email=request.session['email'])
-    wallet = Wallet.objects.get(wallet_id=wallet_id, user=user)
+@csrf_exempt
+def save_wallet_address(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            wallet_address = data.get('wallet_address')
 
-    # Fetch wallet balance from BitGo
-    url = f"{settings.BITGO_API_URL}/btc/wallet/{wallet.wallet_id}"
-    headers = {
-        'Authorization': f"Bearer {settings.BITGO_ACCESS_TOKEN}",
-        'Content-Type': 'application/json',
-    }
+            if wallet_address:
+                # Get or create the Wallet object for the logged-in user
+                wallet, created = Wallet.objects.get_or_create(user=request.user)
 
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        wallet_data = response.json()
-        wallet.balance = wallet_data['balance'] / 1e8  # Convert satoshis to BTC
-        wallet.save()
-        return render(request, 'wallet/detail.html', {'wallet': wallet})
+                # Update the wallet address
+                wallet.wallet_address = wallet_address
+                wallet.save()
+
+                return JsonResponse({'success': True, 'message': 'Wallet address saved successfully!'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Invalid wallet address.'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+
+
+@login_required
+def save_wallet_address(request):
+    if request.method == "POST":
+        try:
+            # Load wallet address from request body
+            data = json.loads(request.body)
+            wallet_address = data.get('wallet_address')
+
+            if not wallet_address:
+                return JsonResponse({'status': 'error', 'message': 'No wallet address provided'}, status=400)
+
+            # Fetch the logged-in user's email from session and find corresponding UserForm
+            user_email = request.session.get('email')
+            user = get_object_or_404(UserForm, email=user_email)
+
+            # Check if user already has a wallet
+            wallet, created = Wallet.objects.get_or_create(user=user)
+
+            # Update the wallet address and save
+            wallet.wallet_address = wallet_address
+            wallet.save()
+
+            return JsonResponse({'status': 'success', 'message': 'Wallet address saved successfully'})
+
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
     else:
-        messages.error(request, 'Failed to retrieve wallet details.')
-        return redirect('home')
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
-# List all wallets
+
+def wallet_detail(request, wallet_address):
+    # Optionally, you could retrieve the wallet from the database using the wallet_address
+    # For example:
+    # wallet = Wallet.objects.filter(wallet_address=wallet_address).first()
+
+    context = {
+        'wallet_address': wallet_address,  # Send the wallet address to the template
+    }
+    return render(request, 'wallet/metamask.html', context)
+
+
 @login_required
-def list_wallets(request):
-    user = UserForm.objects.get(email=request.session['email'])
-    wallets = Wallet.objects.filter(user=user)
-    return render(request, 'wallet/success.html', {'wallets': wallets})
-# def create_wallet_view(request):
-#     if request.method == "POST":
-#         coin = request.POST.get("coin", "btc")
-#         label = request.POST.get("label", f"{request.session['email']}'s Wallet")
-#
-#         # Call the BitGo API to create the wallet
-#         wallet_data = create_bitgo_wallet(user_email=request.session['email'], coin=coin, label=label)
-#         if wallet_data:
-#             try:
-#                 # Fetch user using email from the session
-#                 user = UserForm.objects.get(email=request.session['email'])
-#
-#                 # Save wallet information in the database
-#                 Wallet.objects.create(
-#                     user=user,
-#                     wallet_id=wallet_data.get("id"),
-#                     coin=coin,
-#                     label=label,
-#                     balance=0,  # Update balance later if needed
-#                 )
-#                 return redirect('wallet_success')
-#             except UserForm.DoesNotExist:
-#                 return render(request, "wallet/wallet.html", {"error": "User does not exist. Please log in again."})
-#
-#         return render(request, "wallet/wallet.html", {"error": "Failed to create wallet. Please try again."})
-#
-#     return render(request, "wallet/wallet.html")
-def wallet_success(request):
-    return render(request, "wallet/success.html")
+def disconnect_wallet(request):
+    if request.method == 'POST':
+        try:
+            # Get the user's email from the session
+            user_email = request.session.get('email')
+            user = UserForm.objects.get(email=user_email)
+
+            # Find the user's wallet and clear the wallet address
+            wallet = Wallet.objects.filter(user=user).first()
+            if wallet:
+                wallet.wallet_address = None  # Clear wallet address
+                wallet.save()
+
+            # Optionally, you can also clear session data if required
+            # del request.session['wallet_address']  # Clear session wallet info if needed
+
+            return JsonResponse({'status': 'success', 'message': 'Wallet disconnected successfully'})
+        except UserForm.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+@login_required
+def save_transaction(request):
+    if request.method == 'POST':
+        try:
+            # Load JSON data from the request
+            data = json.loads(request.body)
+
+            # Get the user based on the email stored in session
+            user_email = request.session.get('email')
+            user = get_object_or_404(UserForm, email=user_email)
+
+            # Save the transaction details in the Transaction model
+            transaction = Transaction(
+                user=user,
+                recipient_address=data['recipient_address'],
+                amount=data['amount'],
+                status=data['status'],
+                transaction_hash=data['transaction_hash'],
+                reason=data.get('reason', '')  # Optional field
+            )
+            transaction.save()
+
+            # Return a success response
+            return JsonResponse({'status': 'success'}, status=201)
+        
+        except Exception as e:
+            # Handle any errors that occur and return an error response
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+    # Return error if request method is not POST
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+
+def transaction_history(request):
+    # Get the user's email from the session
+    user_email = request.session.get('email')
+
+    # Check if the session email exists
+    if not user_email:
+        print("No email in session")
+        return redirect('login')
+
+    # Fetch the user and their transactions
+    user = get_object_or_404(UserForm, email=user_email)
+    transactions = Transaction.objects.filter(user=user).order_by('-created_at')
+    # Render the transactions in the template
+    return render(request, 'wallet/metamask.html', {'transactions': transactions})

@@ -21,6 +21,9 @@ urlpatterns = [
     path('crypto/prices/', views.get_crypto_prices, name='get_crypto_prices'),
 
     path('create_wallet/', create_wallet, name='create_wallet'),
-    path('wallet/<str:wallet_id>/', wallet_detail, name='wallet_detail'),
-    path('wallets/', list_wallets, name='list_wallets'),
+    path('save-wallet-address/', views.save_wallet_address, name='save_wallet_address'),
+    path('disconnect_wallet/', views.disconnect_wallet, name='disconnect_wallet'),  # URL for disconnecting
+    path('wallet/<str:wallet_address>/', views.wallet_detail, name='wallet_detail'),  # New URL for the wallet detail page
+    path('save_transaction/', save_transaction, name='save_transaction'),
+    path('transaction-history/', transaction_history, name='transaction_history'),
 ]

@@ -27,14 +27,96 @@
 
     <!-- About Start -->
     <!-- create_wallet.html -->
-<h2>Create Your Wallet</h2>
-<form method="POST">
-    {% csrf_token %}
-    <input type="password" name="wallet_password" placeholder="Enter wallet password" required />
-    <button type="submit">Create Wallet</button>
-</form>
+<!-- MetaMask Option -->
+   <h1>MetaMask Wallet Integration</h1>
+   <button id="connect-wallet">Connect Wallet</button>
+<button id="disconnect-wallet" style="display:none;">Disconnect Wallet</button>
+<div id="wallet-address"></div>
 
-
+    <script>
+        const connectWalletButton = document.getElementById('connect-wallet');
+        const disconnectWalletButton = document.getElementById('disconnect-wallet');
+        const walletAddressDiv = document.getElementById('wallet-address');
+    
+        let web3;
+        let account = null;
+    
+        // Helper function to get CSRF token from Django template
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    
+        const csrfToken = getCookie('csrftoken');
+    
+        // Connect to MetaMask
+        connectWalletButton.addEventListener('click', async () => {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    // Request account access from MetaMask
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    account = accounts[0];
+    
+                    // Display the connected wallet address on the page
+                    walletAddressDiv.innerHTML = `<p>Connected Wallet Address: ${account}</p>`;
+                    
+                    // Show the disconnect button
+                    disconnectWalletButton.style.display = 'block';
+    
+                    // Send the wallet address to the backend to save
+                    await fetch("{% url 'save_wallet_address' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken  // CSRF token for Django
+                        },
+                        body: JSON.stringify({
+                            'wallet_address': account
+                        })
+                    }).then(response => response.json())
+                      .then(data => console.log(data));
+    
+                    console.log("Wallet address sent to the server.");
+                } catch (error) {
+                    console.error("User denied account access or an error occurred.");
+                }
+            } else {
+                alert("Please install MetaMask!");
+            }
+        });
+    
+        // Disconnect MetaMask (this clears the frontend state, not MetaMask itself)
+        disconnectWalletButton.addEventListener('click', () => {
+            // Clear the wallet address displayed on the page
+            walletAddressDiv.innerHTML = '<p>No wallet connected</p>';
+    
+            // Hide the disconnect button and show connect button
+            disconnectWalletButton.style.display = 'none';
+    
+            // Optionally, you can clear the wallet address on the backend (if needed)
+            fetch("{% url 'disconnect_wallet' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken  // CSRF token for Django
+                },
+            }).then(response => response.json())
+              .then(data => console.log('Wallet disconnected:', data));
+    
+            console.log("Wallet disconnected.");
+        });
+    </script>
+    
+    
     <!-- About End -->
 
 {% endblock %}

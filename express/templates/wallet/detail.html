@@ -26,10 +26,11 @@
     <!-- Header End -->
 
     <!-- About Start -->
-    <h2>{{ wallet.label }}</h2>
-<p>Wallet ID: {{ wallet.wallet_id }}</p>
-<p>Coin: {{ wallet.coin }}</p>
-<p>Balance: {{ wallet.balance }}</p>
+    <div class="wallet-container">
+        <h1>Wallet Details</h1>
+        <p><strong>Address:</strong> {{ wallet_address }}</p>
+        <p><strong>Balance:</strong> {{ wallet_balance }} ETH</p>
+    </div>
 
 
     <!-- About End -->

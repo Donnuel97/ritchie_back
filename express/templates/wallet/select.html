@@ -1,0 +1,211 @@
+{% load static %}
+<!-- Modal -->
+<div class="modal fade" id="createWalletModal" tabindex="-1" aria-labelledby="createWalletModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content modal-gray-bg"> <!-- Added a custom class for gray background -->
+      <div class="modal-header">
+        <h5 class="modal-title" id="createWalletModalLabel">Choose a Wallet</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Wallet options as icons -->
+        <div class="container">
+          <div class="row text-center">
+            <!-- MetaMask Option -->
+            <div class="col-4">
+              
+                <img src="{% static 'img/metamask.png' %}" alt="MetaMask" class="img-fluid animated-icon" style="width: 60px;">
+                <button id="connect-wallet" class="link-button">Metamask</button>
+             
+            </div>
+            <!-- Trust Wallet Option -->
+            <div class="col-4">
+              <a href="#" class="wallet-option">
+                <img src="{% static 'img/trustwallet.png' %}" alt="TrustWallet" class="img-fluid animated-icon" style="width: 60px;">
+                <p>Trust Wallet</p>
+              </a>
+            </div>
+            <!-- Blockchain Option -->
+            <div class="col-4">
+              <a href="#" class="wallet-option">
+                <img src="{% static 'img/blockchain.png' %}" alt="Blockchain" class="img-fluid animated-icon" style="width: 60px;">
+                <p>Blockchain</p>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+    const connectWalletButton = document.getElementById('connect-wallet');
+    const disconnectWalletButton = document.getElementById('disconnect-wallet');
+    const walletAddressDiv = document.getElementById('wallet-address');
+
+    let web3;
+    let account = null;
+
+    // Helper function to get CSRF token from Django template
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrfToken = getCookie('csrftoken');
+
+    // Connect to MetaMask
+    connectWalletButton.addEventListener('click', async () => {
+        if (typeof window.ethereum !== 'undefined') {
+            try {
+                // Request account access from MetaMask
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                account = accounts[0];
+
+                // Send the wallet address to the backend to save
+                await fetch("{% url 'save_wallet_address' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken  // CSRF token for Django
+                    },
+                    body: JSON.stringify({
+                        'wallet_address': account
+                    })
+                }).then(response => response.json())
+                  .then(data => {
+                      if (data.status === 'success') {
+                          // Redirect to the wallet page after successful connection
+                          window.location.href = `/wallet/${account}/`;  // Redirecting with wallet address in URL
+                      }
+                  });
+
+            } catch (error) {
+                console.error("User denied account access or an error occurred.");
+            }
+        } else {
+            alert("Please install MetaMask!");
+        }
+    });
+
+    // Disconnect MetaMask (this clears the frontend state, not MetaMask itself)
+    disconnectWalletButton.addEventListener('click', () => {
+        // Clear the wallet address displayed on the page
+        walletAddressDiv.innerHTML = '<p>No wallet connected</p>';
+
+        // Hide the disconnect button and show connect button
+        disconnectWalletButton.style.display = 'none';
+
+        // Optionally, you can clear the wallet address on the backend (if needed)
+        fetch("{% url 'disconnect_wallet' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken  // CSRF token for Django
+            },
+        }).then(response => response.json())
+          .then(data => console.log('Wallet disconnected:', data));
+
+        console.log("Wallet disconnected.");
+    });
+</script>
+<script>
+  const connectWalletButton = document.getElementById('connect-wallet');
+
+  function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
+
+  const csrfToken = getCookie('csrftoken');
+
+  // Connect MetaMask and send wallet address to the backend
+  connectWalletButton.addEventListener('click', async () => {
+      if (typeof window.ethereum !== 'undefined') {
+          try {
+              const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+              const account = accounts[0];
+
+              // Send wallet address to the backend
+              await fetch("{% url 'save_wallet_address' %}", {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': csrfToken
+                  },
+                  body: JSON.stringify({ 'wallet_address': account })
+              }).then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.location.href = `/wallet/${account}/`;
+                    } else {
+                        console.error('Error saving wallet:', data.message);
+                    }
+                });
+          } catch (error) {
+              console.error('Error connecting to MetaMask:', error);
+          }
+      } else {
+          alert('Please install MetaMask!');
+      }
+  });
+</script>
+<!-- Add CSS for gray background and animations -->
+<style>
+/* Gray background for the modal */
+.modal-gray-bg {
+  background-color: #f0f0f0; /* Light gray background */
+}
+
+/* Animation for zoom and bounce */
+@keyframes zoomIn {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Animate the icons on hover */
+.animated-icon {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Zoom and bounce effect on hover */
+.animated-icon:hover {
+  animation: zoomIn 0.5s ease-in-out, bounce 1s infinite;
+}
+</style>
+

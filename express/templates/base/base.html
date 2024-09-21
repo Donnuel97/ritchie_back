@@ -10,7 +10,7 @@
     <meta content="" name="description">
 
     <!-- Favicon -->
-    <link href="{% static 'img/rlogo.jpg' %}" rel="icon">
+    <link href="{% static 'img/rlogo.jpg' %}" rel="icon" >
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,6 +35,7 @@
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
     <!-- Chart.js Library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+     <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 
@@ -42,6 +43,8 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.0/dist/ethers.umd.min.js"></script>
+
 
 </head>
 
@@ -68,7 +71,8 @@
                 <div class="nav-item dropdown">
                     <a href="{% url 'service' %}" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Service</a>
                     <div class="dropdown-menu shadow-sm m-0">
-                        <a href="{% url 'create_wallet' %}" class="dropdown-item">Create wallet</a>
+                        <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#createWalletModal">Create wallet</a>
+
                         <!-- Button trigger modal -->
                         <a href="#" class="dropdown-item" data-toggle="modal" data-target="#exampleModal">Buy Airtime</a>
                         <a href="{% url 'exchange' %}" class="dropdown-item">Crypto exchange</a>
@@ -105,6 +109,7 @@
     {%  include 'home/sign_up.html' %}
     {%  include 'home/login.html' %}
     {%  include 'home/airtime.html' %}
+    {%  include 'wallet/select.html' %}
     <!-- Navbar End -->
 
     <!-- Body starts -->
